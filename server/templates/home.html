@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<title> Map </title>
+	<link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" integrity="sha512-xodZBNTC5n17Xt2atTPuE1HxjVMSvLVW9ocqUKLsCC5CXdbqCmblAshOMAS6/keqq/sMZMZ19scR4PsZChSR7A==" crossorigin="" />
+	<script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js" integrity="sha512-XQoYMqMTK8LvdxXYG3nZ448hOEQiglfqkJs1NOQV44cWnUrBc8PkAOcXy20w0vlaXaVUearIOBhiXZ5V3ynxwA==" crossorigin="">		
+	</script>
+	
+
+</head>
+<body>
+      <div id = "map" style = "width:80%; height:80% ; margin: auto;" >
+      	<img src="../static/map.jpg" width=100% height=100%>
+      </div>
+
+	  <div>
+		  <button onclick="replayfunc()">Replay</button>
+		  <button onclick="normal()">Normal</button>
+	  </div>
+
+
+      <script>
+      	  
+			let replay = 0
+			var myicon = L.icon({
+			iconUrl: 'https://python-server-model.herokuapp.com//static/leaflet/images/marker-icon.png', iconSize: [15, 24]})
+			// Create the map
+			var map = L.map('map').setView([1,1], 1); // this number related to the
+
+			var marker = L.marker([0, 0],{icon: myicon, draggable: 'false'}).addTo(map);
+
+			marker.on('dragend', function(event) {
+				var position = marker.getLatLng();
+				console.log(position)})
+				
+			var pathLine = L.polyline([]).addTo(map)
+
+	      	async function get_updates() {
+				  if(replay == 0){
+						fetch('https://python-server-model.herokuapp.com/getdata').then(function(response) {
+							return response.json()
+					}).then(function(json) 
+					{
+					// console.log('parsed json-----------', json)
+					// console.log(typeof(json))
+
+					x_val = json["x_val_seyam"]
+					y_val = json["y_val_seyam"]
+
+
+					// console.log(x_val)
+					// console.log(y_val)
+
+					var new_loc = new L.LatLng(x_val, y_val);
+						marker.setLatLng(new_loc); 
+					
+					})
+					.catch(function(ex) {
+					console.log('parsing failed', ex)
+					})
+			}
+		}
+
+			const sleep = (delay) => new Promise ((resolve) => setTimeout(resolve, delay))
+			
+			async function replayfunc() {
+				replay = 1
+				fetch('https://python-server-model.herokuapp.com/getreplaydata').then(function(response) {
+					return response.json()
+					}).then(function(json) 
+					{
+					// console.log('parsed json-----------', json)
+					// console.log(typeof(json))
+					var pathcoords = []
+					json.forEach(i => {
+						x_val = i["x_val_seyam"]
+						y_val = i["y_val_seyam"]
+						// console.log(x_val)
+						// console.log(y_val)
+						pathcoords.push([x_val, y_val])
+						var new_loc = new L.LatLng(x_val, y_val);
+						marker.setLatLng(new_loc);
+						sleep(1000)
+					});
+					pathLine = L.polyline(pathcoords).addTo(map)
+					})
+					.catch(function(ex) {
+					console.log('parsing failed', ex)
+					})
+			}
+
+			function normal() {
+				replay = 0
+				pathLine.remove(map)
+			}
+			setInterval(get_updates, 250);
+					
+      </script>
+   </body>
+</html>

@@ -10,7 +10,7 @@ import json
 
 json_dir = input("Enter the json data file path: ")
 
-URL = "https://python-server-model.herokuapp.com/addlocation"
+URL = "http://python-server-model.herokuapp.com/addlocation"
 
 file = open(json_dir)
 
